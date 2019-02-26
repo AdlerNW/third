@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Document</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+    }
+
+    #myCanvas {
+      background: #ffc;
+      margin: 0 auto;
+      display: block;
+      border: 1px solid #000;
+    }
+
+    #btnStart {
+      width: 100px;
+      height: 35px;
+      background: rgba(255, 0, 0, 0.5);
+      color: red;
+      font-size: 26px;
+      letter-spacing: 2px;
+      display: block;
+      margin: 10px auto;
+    }
+  </style>
+</head>
+
+<body>
+  <canvas id="myCanvas" width="600" height="600"></canvas>
+  <button id="btnStart">Start</button>
+  <script>
+    let canvas = null,
+      ctd = null,
+      btnStart = null,
+      timer = null,
+      leftPressed = false,
+      upPressed = false,
+      rightPressed = false,
+      downPressed = false,
+      x = 0,
+      y = 0,
+      foodX = 0,
+      foodY = 0,
+      widthPix = 10,
+      heightPix = 10,
+      dx = 10,
+      dy = 0,
+      score = 0,
+      countLenghtSnake = 1,
+      snake = [];
+
+    window.onload = function() {
+      canvas = document.getElementById("myCanvas");
+      ctd = canvas.getContext("2d");
+      btnStart = document.getElementById("btnStart");
+      btnStart.addEventListener('click', game);
+      foodX = Math.floor(Math.random() * 59 + 1) * widthPix;
+      foodY = Math.floor(Math.random() * 59 + 1) * heightPix;
+
+      for (let i = 0; i < (canvas.width * canvas.height) / (widthPix * heightPix); i++) {
+        snake[i] = {
+          x: 0,
+          y: 0,
+          d: 0
+        };
+      }
+    }
+
+    function game() {
+      btnStart.disabled = 'disabled';
+      document.addEventListener("keydown", keyDownHandler, false);
+      document.addEventListener("keyup", keyUpHandler, false);
+      timer = setInterval(draw, 100);
+    }
+
+    function keyDownHandler(e) {
+      switch (e.keyCode) {
+        case 37:
+          if (snake[0].d != 3) {
+            leftPressed = true;
+            snake[0].d = 1;
+          }
+          break;
+        case 38:
+          if (snake[0].d != 4) {
+            upPressed = true;
+            snake[0].d = 2;
+          }
+          break;
+        case 39:
+          if (snake[0].d != 1) {
+            rightPressed = true;
+            snake[0].d = 3;
+          }
+          break;
+        case 40:
+          if (snake[0].d != 2) {
+            downPressed = true;
+            snake[0].d = 4;
+          }
+          break;
+      }
+    }
+
+    function keyUpHandler(e) {
+      switch (e.keyCode) {
+        case 37:
+          leftPressed = false;
+          break;
+        case 38:
+          upPressed = false;
+          break;
+        case 39:
+          rightPressed = false;
+          break;
+        case 40:
+          downPressed = false;
+          break;
+      }
+    }
+
+    function draw() {
+      ctd.clearRect(0, 0, canvas.width, canvas.height);
+      drawSnake();
+      drawFood();
+      eatFood();
+      drawScore();
+
+      if (snake[0].x < 0 || snake[0].x > canvas.width - widthPix || snake[0].y < 0 || snake[0].y > canvas.height - heightPix) {
+        alert("Game over, увы");
+        clearInterval(timer);
+        window.location.reload();
+      }
+
+      for (let i = 1; i < countLenghtSnake; i++) {
+        if (snake[0].x == snake[i].x && snake[0].y == snake[i].y) {
+          alert("Game over, увы");
+          clearInterval(timer);
+          window.location.reload();
+        }
+      }
+
+      if (leftPressed) {
+        dx = -10;
+        dy = 0;
+      }
+      if (upPressed) {
+        dx = 0;
+        dy = -10;
+      }
+      if (rightPressed) {
+        dx = 10;
+        dy = 0;
+      }
+      if (downPressed) {
+        dx = 0;
+        dy = 10;
+      }
+
+      snake[0].x += dx;
+      snake[0].y += dy;
+    }
+
+    function drawSnake() {
+      ctd.fillStyle = 'black';
+      for (let i = 0; i < countLenghtSnake; i++) {
+
+        if (i != 0) {
+          switch (snake[i - 1].d) {
+            case 1:
+              snake[i].x = snake[i - 1].x + widthPix;
+              snake[i].y = snake[i - 1].y;
+              ctd.fillStyle = 'lightgreen';
+              ctd.fillRect(snake[i].x, snake[i].y, widthPix, heightPix);
+              break;
+            case 2:
+              snake[i].x = snake[i - 1].x;
+              snake[i].y = snake[i - 1].y + heightPix;
+              ctd.fillStyle = 'lightgreen';
+              ctd.fillRect(snake[i].x, snake[i].y, widthPix, heightPix);
+              break;
+            case 3:
+              snake[i].x = snake[i - 1].x - widthPix;
+              snake[i].y = snake[i - 1].y;
+              ctd.fillStyle = 'lightgreen';
+              ctd.fillRect(snake[i].x, snake[i].y, widthPix, heightPix);
+              break;
+            case 4:
+              snake[i].x = snake[i - 1].x;
+              snake[i].y = snake[i - 1].y - heightPix;
+              ctd.fillStyle = 'lightgreen';
+              ctd.fillRect(snake[i].x, snake[i].y, widthPix, heightPix);
+              break;
+          }
+        }
+        ctd.fillStyle = 'darkgreen';
+        ctd.fillRect(snake[0].x, snake[0].y, widthPix, heightPix);
+      }
+
+      for (let i = countLenghtSnake - 1; i > 0; i--) {
+        snake[i].d = snake[i - 1].d;
+      }
+    }
+
+    function drawFood() {
+      ctd.fillStyle = 'red';
+      ctd.fillRect(foodX, foodY, widthPix, heightPix);
+    }
+
+    function eatFood() {
+      if (snake[0].x == foodX && snake[0].y == foodY) {
+        foodX = newFoodX();
+        foodY = newFoodY();
+        score++;
+        countLenghtSnake++;
+      }
+    }
+
+    function drawScore() {
+      ctd.fillStyle = 'black';
+      ctd.font = "16px Arial";
+      ctd.fillText("Score: " + score, 8, 20);
+    }
+
+    function newFoodX() {
+      let newX = Math.floor(Math.random() * 60) * widthPix;
+      if (foodX == newX) {
+        newFoodX();
+      } else {
+        return newX;
+      }
+    }
+
+    function newFoodY() {
+      let newY = Math.floor(Math.random() * 60) * heightPix;
+      if (foodY == newY) {
+        newFoodY();
+      } else {
+        return newY;
+      }
+    }
+  </script>
+</body>
+
+</html>
